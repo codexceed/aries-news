@@ -100,22 +100,24 @@ class NewsService:
             NewsServiceError: If the provider is unreachable or returns a
                 response that cannot be parsed.
         """
-        cache_key = (query.strip().lower(), max_results)
+        normalized_query = query.strip()
+        cache_key = (normalized_query.lower(), max_results)
         cached = self._cache_get(cache_key)
         if cached is not None:
             logger.debug("news cache hit for %r", cache_key)
             return cached
 
-        payload = await self._request(query, max_results)
+        payload = await self._request(normalized_query, max_results)
         raw_articles = payload.get("articles", [])
         articles = [
             article for raw in raw_articles if (article := self._to_article(raw)).url.strip()
         ]
         dropped = len(raw_articles) - len(articles)
         if dropped:
-            logger.info("dropped %d article(s) with no usable url for query %r", dropped, query)
+            msg = "dropped %d article(s) with no usable url for query %r"
+            logger.info(msg, dropped, normalized_query)
         self._cache[cache_key] = (time.monotonic(), articles)
-        logger.info("fetched %d articles for query %r", len(articles), query)
+        logger.info("fetched %d articles for query %r", len(articles), normalized_query)
         return articles
 
     def _cache_get(self, key: tuple[str, int]) -> list[ArticleBase] | None:

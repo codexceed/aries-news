@@ -40,9 +40,18 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
 
 @pytest_asyncio.fixture
 async def db_engine() -> AsyncIterator[AsyncEngine]:
-    """Yield an async engine with a freshly created schema, dropped on teardown."""
+    """Yield an async engine with a freshly created schema, dropped on teardown.
+
+    Also disposes the application's module-level engine, whose pooled
+    connections cache prepared-statement plans (incl. enum type OIDs). Recreating
+    the schema here changes those OIDs, so without this the SSE/worker code paths
+    that use the shared engine could hit a stale plan.
+    """
+    from app.core.db import engine as app_engine
+
     settings = get_settings()
     engine = create_async_engine(settings.database_url)
+    await app_engine.dispose(close=False)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
@@ -52,6 +61,7 @@ async def db_engine() -> AsyncIterator[AsyncEngine]:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
         await engine.dispose()
+        await app_engine.dispose(close=False)
 
 
 @pytest_asyncio.fixture

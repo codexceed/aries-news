@@ -56,7 +56,7 @@ test-fast: ## Fast subset for pre-commit (pure logic; no DB, no e2e)
 test-e2e: ## Run the Playwright browser smoke test
 	$(UV) run pytest -m e2e
 
-check: lint typecheck pylint test ## Run everything CI runs
+check: lint typecheck pylint test ## Lint + typecheck + pylint + tests (CI also runs e2e separately)
 
 clean: ## Remove caches and build artifacts
 	rm -rf .pytest_cache .ruff_cache .coverage htmlcov dist build **/__pycache__

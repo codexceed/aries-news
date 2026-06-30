@@ -116,7 +116,7 @@ business logic in `services/`, HTTP concerns in `api/`.
 | `make format` | ruff format + autofix |
 | `make lint` / `make typecheck` / `make pylint` | individual gates |
 | `make test` / `make test-fast` / `make test-e2e` | full / fast / Playwright |
-| **`make check`** | **everything CI runs** — green before you push |
+| **`make check`** | lint + typecheck + pylint + tests (CI also runs the e2e smoke) — green before you push |
 
 All Python runs inside the `uv` environment. **Run `make check` before
 committing.**

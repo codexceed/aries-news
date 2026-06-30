@@ -58,7 +58,7 @@ A liveness probe is available at `GET /health`. The news search JSON endpoint is
 make test           # full unit/integration suite with coverage
 make test-fast      # fast subset (no coverage, no e2e) — for pre-commit
 make test-e2e       # Playwright browser smoke test
-make check          # everything CI runs: lint + typecheck + pylint + test
+make check          # lint + typecheck + pylint + tests (CI also runs e2e)
 ```
 
 Run `make help` for the full list of targets, and `make format` to auto-format.
@@ -102,6 +102,5 @@ Quality gates: `ruff` (format + lint, google docstrings), `pyright` (strict),
 
 ## Status
 
-Backend core and the news service are in place; the insights service
-(JobQueue + SSE) and the frontend are in progress. See
-[`PROGRESS.md`](PROGRESS.md) for the up-to-date checklist.
+Complete and deployed — live at <https://aries-news.onrender.com>, with CI green
+on `main`. See [`PROGRESS.md`](PROGRESS.md) for the full checklist.

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from urllib.parse import urlencode
 
-from hypothesis import given
+from hypothesis import example, given
 from hypothesis import strategies as st
 
 from app.core.url import normalize_url
@@ -18,6 +18,8 @@ _param_vals = st.text(alphabet="xyz123", max_size=4)
 
 
 @given(_printable)
+@example("0 /")  # host-less input with a path — regression for idempotency
+@example("https://example.com/a?utm_source=x#frag")
 def test_idempotent_on_arbitrary_text(value: str) -> None:
     """Normalizing an already-normalized string is a no-op."""
     once = normalize_url(value)

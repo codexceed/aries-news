@@ -1,0 +1,33 @@
+# Render Blueprint — one web service (Docker) + a managed PostgreSQL.
+#
+# Deploy: https://dashboard.render.com → New + → Blueprint → connect this repo.
+# Render builds the Dockerfile, provisions Postgres, wires DATABASE_URL, and runs
+# migrations on start. Set GNEWS_API_KEY and OPENAI_API_KEY when prompted.
+#
+# Note: the app keeps an in-process worker + per-process SSE, so run a single
+# web instance (see docs/adr/0001-stack-and-async.md).
+services:
+  - type: web
+    name: aries-news
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true
+    numInstances: 1
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aries-db
+          property: connectionString
+      - key: GNEWS_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4.1-nano
+
+databases:
+  - name: aries-db
+    plan: free
+    databaseName: aries
+    user: aries

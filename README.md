@@ -61,6 +61,22 @@ make check          # everything CI runs: lint + typecheck + pylint + test
 
 Run `make help` for the full list of targets, and `make format` to auto-format.
 
+## Deploy
+
+The app ships as a Docker image and runs its migrations on start. The repo
+includes a [Render Blueprint](render.yaml) for a one-click deploy:
+
+1. On [Render](https://dashboard.render.com), choose **New + → Blueprint** and
+   connect this repo.
+2. Render builds the Dockerfile, provisions PostgreSQL, wires `DATABASE_URL`,
+   and runs migrations automatically.
+3. Set `GNEWS_API_KEY` and `OPENAI_API_KEY` when prompted.
+
+Any Dockerfile-based host works (Railway, Fly.io, …) — set the same env vars.
+Run a **single web instance**: the worker and SSE are in-process (see
+[ADR-0001](docs/adr/0001-stack-and-async.md)). A platform-provided
+`postgres://` URL is coerced to the async driver automatically.
+
 ## Project layout
 
 ```

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -39,6 +40,28 @@ class Settings(BaseSettings):
     news_cache_ttl_seconds: int = 300
 
     log_level: str = "INFO"
+
+    @field_validator("database_url")
+    @classmethod
+    def _ensure_async_driver(cls, value: str) -> str:
+        """Coerce a platform-provided URL to the async (asyncpg) driver.
+
+        Managed hosts (Render, Railway, Heroku, ...) inject ``postgres://`` or
+        ``postgresql://`` URLs, but SQLAlchemy's async engine needs
+        ``postgresql+asyncpg://``. URLs that already specify a driver are left
+        untouched.
+
+        Args:
+            value: The configured database URL.
+
+        Returns:
+            The URL with an async driver scheme.
+        """
+        if value.startswith("postgres://"):
+            value = "postgresql://" + value.removeprefix("postgres://")
+        if value.startswith("postgresql://"):
+            value = "postgresql+asyncpg://" + value.removeprefix("postgresql://")
+        return value
 
 
 @lru_cache

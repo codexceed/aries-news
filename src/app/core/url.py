@@ -49,9 +49,12 @@ def normalize_url(url: str) -> str:
         The normalized URL. Returns the stripped input unchanged if it cannot
         be parsed into a host-bearing URL.
     """
-    parts = urlsplit(url.strip())
-    if not parts.netloc and not parts.path:
-        return url.strip()
+    stripped = url.strip()
+    parts = urlsplit(stripped)
+    # Without a host there is nothing to canonicalize; return the input
+    # unchanged so the function stays idempotent on non-URL text.
+    if not parts.netloc:
+        return stripped
 
     scheme = (parts.scheme or "https").lower()
 

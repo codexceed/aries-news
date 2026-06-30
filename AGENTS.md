@@ -62,6 +62,24 @@ repo owner can bypass these for the occasional hotfix.)
   - **Testing** — how it was verified.
 - Reference an ADR when the change is architectural (see Non-negotiables).
 
+### Explain a major change after opening its PR
+
+For a **major change** (new architecture, a new feature's shape, or a
+public-interface change — the same bar that warrants an ADR), don't just hand
+over the PR link. Present the user a **brief, visually rich** summary in the
+chat:
+
+- **Architecture** — a small Mermaid (or ASCII) diagram of the components the
+  change touches and how they relate.
+- **Flow** — a sequence/flow diagram of the new runtime path (request → … →
+  result).
+- **Example** — one concrete walkthrough: sample input → what happens → output.
+
+Keep it skimmable, not a wall of text. Then ask the user **2–4 short follow-up
+questions** that check and deepen their understanding (trade-offs taken, edge
+cases, "what would you want next?") — use the answers to surface gaps before the
+change is merged.
+
 ## Where things live
 
 The layering and full tree are in

@@ -2,8 +2,9 @@ name: Release
 
 # Automated releases + CHANGELOG via release-please. On each push to main it
 # maintains a "release PR" that bumps the version and updates CHANGELOG.md from
-# Conventional Commits; merging that PR tags the version and cuts a GitHub
-# release.
+# Conventional Commits. That PR is set to auto-merge once the required checks
+# pass, so releases are hands-off; merging it tags the version and cuts a
+# GitHub release.
 on:
   push:
     branches: [main]
@@ -17,5 +18,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
           release-type: python
+
+      # Auto-merge the release PR once CI passes (squash keeps history linear).
+      # Note: a release PR merged by GITHUB_TOKEN does not re-trigger this
+      # workflow, so the tag/GitHub release is cut on the next push to main. For
+      # fully hands-off tagging, swap GITHUB_TOKEN for a PAT/App token.
+      - name: Auto-merge the release PR
+        if: ${{ steps.release.outputs.pr }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh pr merge --squash --auto "${{ fromJson(steps.release.outputs.pr).number }}"

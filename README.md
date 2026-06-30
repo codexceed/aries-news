@@ -79,7 +79,7 @@ Run a **single web instance**: the worker and SSE are in-process (see
 
 ## Project layout
 
-```
+```text
 src/app/
   main.py        FastAPI app factory
   core/          config, async DB engine, enums, URL normalization

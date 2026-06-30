@@ -1,0 +1,22 @@
+# Keep the build context (and image) small. README.md + pyproject + uv.lock +
+# src + alembic are required to build/run; everything else is excluded.
+.git
+.github
+.venv
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.pyright/
+.coverage
+htmlcov/
+.env
+tests/
+design/
+docs/
+*.png
+engineering-case-study.pdf
+.playwright-mcp/
+test-results/
+playwright-report/
+.DS_Store

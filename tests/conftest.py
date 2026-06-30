@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 
+import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
@@ -24,6 +25,17 @@ from sqlalchemy.ext.asyncio import (
 from app.api.insights import router as insights_router
 from app.core.config import get_settings
 from app.core.db import Base, get_session
+
+# Test modules that need a running PostgreSQL. Auto-marked `db` so the fast
+# pre-commit subset (`-m "not e2e and not db"`) can skip them.
+_DB_TEST_FILES = frozenset({"test_insights_repository.py", "test_jobs.py", "test_insights_api.py"})
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Tag DB-backed test modules with the ``db`` marker."""
+    for item in items:
+        if item.path.name in _DB_TEST_FILES:
+            item.add_marker(pytest.mark.db)
 
 
 @pytest_asyncio.fixture

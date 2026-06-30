@@ -33,6 +33,7 @@ dev = [
     "anyio>=4.6",
     "playwright>=1.49",
     "pytest-playwright>=0.6",
+    "pre-commit>=4.0",
 ]
 
 [build-system]
@@ -133,6 +134,7 @@ testpaths = ["tests"]
 addopts = "-q --strict-markers"
 markers = [
     "e2e: end-to-end browser tests (Playwright); slower, excluded from the fast pre-commit subset",
+    "db: tests requiring a running PostgreSQL; excluded from the fast pre-commit subset",
 ]
 
 [tool.coverage.run]

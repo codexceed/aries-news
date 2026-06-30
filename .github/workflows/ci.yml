@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: aries
+          POSTGRES_PASSWORD: aries
+          POSTGRES_DB: aries
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aries -d aries"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://aries:aries@localhost:5432/aries
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Ruff lint
+        run: uv run ruff check src tests
+
+      - name: Ruff format check
+        run: uv run ruff format --check src tests
+
+      - name: Pyright (strict)
+        run: uv run pyright
+
+      - name: Pylint
+        run: uv run pylint src/app
+
+      - name: Tests (unit + integration, with coverage)
+        run: uv run pytest -m "not e2e" --cov --cov-report=term-missing
+
+      - name: Install Playwright browser
+        run: uv run playwright install --with-deps chromium
+
+      - name: E2E smoke test
+        run: uv run pytest -m e2e

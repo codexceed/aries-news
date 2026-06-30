@@ -50,8 +50,8 @@ pylint: ## Extra design/complexity checks (pylint)
 test: ## Run the full unit/integration suite with coverage
 	$(UV) run pytest --cov --cov-report=term-missing -m "not e2e"
 
-test-fast: ## Fast subset for pre-commit (no coverage, no e2e)
-	$(UV) run pytest -m "not e2e" -x -q
+test-fast: ## Fast subset for pre-commit (pure logic; no DB, no e2e)
+	$(UV) run pytest -m "not e2e and not db" -x -q
 
 test-e2e: ## Run the Playwright browser smoke test
 	$(UV) run pytest -m e2e

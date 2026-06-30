@@ -95,8 +95,9 @@ Legend: ✅ done · 🔄 in progress · ⏳ pending
 - [x] `render.yaml` — Render Blueprint (Docker web + managed Postgres)
 - [x] Repo on GitHub — public: github.com/codexceed/aries-news
 - [ ] Enable "Actions may create PRs" so release-please can open its release PR
-- [ ] Deploy on Render → live link
-- [x] Handover — public repo link (no invites needed)
+- [x] Deploy on Render → <https://aries-news.onrender.com> (verified: live
+      search → analyze → SSE → OpenAI summary + sentiment works in prod)
+- [x] Handover — public repo link + live URL (no invites needed)
 
 ---
 

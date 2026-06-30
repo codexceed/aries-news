@@ -9,6 +9,8 @@ The UI is server-rendered (Jinja2 + HTMX + Alpine.js + Tailwind) in a warm dark
 "reading-lamp" theme, with sentiment shown as a spectrum bar and a colour-sampled
 card halo.
 
+- **Live demo:** <https://aries-news.onrender.com>
+  _(free tier — the first request may cold-start for ~30s)_
 - **How it works (diagrams, data model, failure modes):**
   [`ARCHITECTURE.md`](ARCHITECTURE.md)
 - **Why this stack:** [`docs/adr/0001-stack-and-async.md`](docs/adr/0001-stack-and-async.md)

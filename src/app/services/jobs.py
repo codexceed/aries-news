@@ -173,17 +173,9 @@ class JobQueue:
             article = await session.get(Article, insight.article_id)
             if article is None:  # pragma: no cover - FK guarantees presence
                 return None
-            article_base = ArticleBase(
-                url=article.url,
-                title=article.title,
-                source=article.source,
-                description=article.description,
-                image_url=article.image_url,
-                published_at=article.published_at,
-            )
             return _ClaimedJob(
                 insight_id=insight.id,
-                article=article_base,
+                article=ArticleBase.model_validate(article),
                 running=InsightRead.model_validate(insight),
             )
 

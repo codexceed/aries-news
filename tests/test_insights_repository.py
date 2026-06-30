@@ -79,6 +79,23 @@ async def test_finalize_success_records_result(async_session: AsyncSession) -> N
     assert done.completed_at is not None
 
 
+async def test_failed_insight_is_reset_on_retry(async_session: AsyncSession) -> None:
+    created = await repo.get_or_create_pending_insight(async_session, ARTICLE)
+    await repo.claim_next_pending(async_session)
+    failed = await repo.finalize_failure(async_session, created.id, "boom")
+    assert failed.status == JobStatus.FAILED
+    assert failed.error == "boom"
+
+    # "Try again" re-requests the same article → the failed row is reset to
+    # PENDING (not returned as-is and not duplicated).
+    retried = await repo.get_or_create_pending_insight(async_session, ARTICLE)
+    assert retried.id == created.id
+    assert retried.status == JobStatus.PENDING
+    assert retried.error is None
+    assert retried.completed_at is None
+    assert await _count(async_session, Insight) == 1
+
+
 async def test_reap_stale_resets_running_job(async_session: AsyncSession) -> None:
     created = await repo.get_or_create_pending_insight(async_session, ARTICLE)
     claimed = await repo.claim_next_pending(async_session)

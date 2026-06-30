@@ -59,19 +59,21 @@ async def upsert_article(session: AsyncSession, article: ArticleBase) -> Article
 
 
 async def get_or_create_pending_insight(session: AsyncSession, article: ArticleBase) -> Insight:
-    """Return the article's single insight, creating a ``PENDING`` one if absent.
+    """Return the article's single insight, queuing or re-queuing as needed.
 
-    Idempotent: re-requesting analysis for the same article returns the existing
-    insight whatever its status (so a finished analysis is never re-queued). The
-    insert relies on the unique ``article_id`` constraint plus ``ON CONFLICT DO
-    NOTHING`` to stay race-safe.
+    Mostly idempotent: a ``PENDING``/``RUNNING``/``DONE`` insight is returned
+    unchanged, so in-flight or finished analyses are never duplicated. A
+    ``FAILED`` insight, however, is **reset to ``PENDING``** (its error and any
+    stale result cleared) so the user's "Try again" actually retries. The insert
+    relies on the unique ``article_id`` constraint plus ``ON CONFLICT DO NOTHING``
+    to stay race-safe.
 
     Args:
         session: The active database session.
         article: The article to analyze.
 
     Returns:
-        The existing or newly created :class:`Insight`.
+        The existing, reset, or newly created :class:`Insight`.
     """
     persisted = await upsert_article(session, article)
 
@@ -85,6 +87,17 @@ async def get_or_create_pending_insight(session: AsyncSession, article: ArticleB
 
     result = await session.execute(select(Insight).where(Insight.article_id == persisted.id))
     insight = result.scalar_one()
+
+    if insight.status == JobStatus.FAILED:
+        insight.status = JobStatus.PENDING
+        insight.error = None
+        insight.summary = None
+        insight.sentiment = None
+        insight.score = None
+        insight.started_at = None
+        insight.completed_at = None
+        insight.timing_ms = None
+
     await session.commit()
     await session.refresh(insight)
     return insight

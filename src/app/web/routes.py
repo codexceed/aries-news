@@ -203,7 +203,7 @@ async def insight_stream(insight_id: int, view: str = "cards") -> EventSourceRes
                 insight = await repo.get_with_article(session, insight_id)
             if insight is None:
                 return
-            article = ArticleBase.model_validate(insight.article, from_attributes=True)
+            article = ArticleBase.model_validate(insight.article)
             html = templates.get_template("partials/article.html").render(
                 a=article,
                 ins=InsightRead.model_validate(insight),
@@ -221,7 +221,7 @@ async def insights_page(request: Request, session: SessionDep) -> HTMLResponse:
     rows = await repo.list_all_with_articles(session)
     items = [
         {
-            "a": ArticleBase.model_validate(row.article, from_attributes=True),
+            "a": ArticleBase.model_validate(row.article),
             "ins": InsightRead.model_validate(row),
         }
         for row in rows

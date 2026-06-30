@@ -93,6 +93,16 @@ async def test_request_uses_expected_params(httpx_mock: HTTPXMock) -> None:
     assert request.url.params["apikey"] == "test-key"
 
 
+async def test_request_query_is_normalized(httpx_mock: HTTPXMock) -> None:
+    httpx_mock.add_response(json=_GNEWS_PAYLOAD)
+    async with httpx.AsyncClient() as client:
+        service = _make_service(client)
+        await service.search("  spaced out  ")
+
+    # The provider request uses the stripped query, not the raw input.
+    assert httpx_mock.get_requests()[0].url.params["q"] == "spaced out"
+
+
 async def test_server_error_raises_news_service_error(httpx_mock: HTTPXMock) -> None:
     httpx_mock.add_response(status_code=500, is_reusable=True)
     async with httpx.AsyncClient() as client:

@@ -8,7 +8,14 @@ from pydantic import BaseModel, ConfigDict
 
 
 class ArticleBase(BaseModel):
-    """An article as returned by the news provider (not yet persisted)."""
+    """An article as returned by the news provider (not yet persisted).
+
+    ``from_attributes`` lets the ORM ``Article`` model be converted directly via
+    ``ArticleBase.model_validate(article)`` everywhere, rather than copying
+    fields by hand.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
 
     url: str
     title: str
@@ -20,8 +27,6 @@ class ArticleBase(BaseModel):
 
 class ArticleRead(ArticleBase):
     """A persisted article, including its database identity."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     id: int
     url_normalized: str

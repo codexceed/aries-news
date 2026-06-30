@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.pyright/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Env / secrets
+.env
+
+# uv
+uv.lock.bak
+
+# Playwright
+.playwright-mcp/
+test-results/
+playwright-report/
+
+# Design scratch screenshots (keep the .html mockups, drop the captures)
+design/mockups/*.png
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

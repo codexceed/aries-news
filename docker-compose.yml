@@ -1,0 +1,21 @@
+# Local development dependencies. For now just Postgres — the app runs on the
+# host via `make run` (the app Dockerfile is added in the infra phase).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: aries
+      POSTGRES_PASSWORD: aries
+      POSTGRES_DB: aries
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aries -d aries"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:

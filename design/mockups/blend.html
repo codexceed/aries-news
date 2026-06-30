@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tide × Dusk — blend mockup</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          navy:  '#10303A',
+          navy2: '#163E49',
+          mist:  '#DCE8E6',
+          mute:  '#8FB0AD',
+          foam:  '#5BA6A0',
+          amber: '#E8A24A',   /* warm accent borrowed from Dusk */
+          coral: '#E1856B',
+        },
+        fontFamily: {
+          read: ['"Source Serif 4"', 'serif'],
+          ui:   ['"Hanken Grotesk"', 'system-ui', 'sans-serif'],
+        },
+      },
+    },
+  }
+</script>
+<style>
+  /* warm-tinted teal glow: Tide base + Dusk warmth */
+  body { background:
+    radial-gradient(90% 70% at 78% -10%, rgba(232,162,74,.10), transparent 60%),
+    radial-gradient(130% 100% at 50% -20%, #16424d 0%, #10303A 60%); }
+
+  /* Dusk edge-glow, colored by sentiment endpoints */
+  .glow-calm { box-shadow: inset 4px 0 0 0 #5BA6A0, -18px 0 40px -28px #5BA6A0; }
+  .glow-neu  { box-shadow: inset 4px 0 0 0 #8FB0AD, -18px 0 40px -28px #8FB0AD; }
+  .glow-turb { box-shadow: inset 4px 0 0 0 #E1856B, -18px 0 40px -28px #E1856B; }
+
+  /* Tide signature: animated tide line */
+  .tideline { position: relative; height: 18px; overflow: hidden; }
+  .tideline svg { position: absolute; left: 0; bottom: 0; width: 200%; animation: tide 9s linear infinite; }
+  @keyframes tide { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+
+  /* Tide signature: sentiment spectrum bar */
+  .spectrum { height: 6px; border-radius: 999px;
+    background: linear-gradient(90deg, #5BA6A0 0%, #8FB0AD 50%, #E1856B 100%); position: relative; }
+  .spectrum .marker { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 999px;
+    background: #DCE8E6; border: 2px solid #10303A; transform: translate(-50%, -50%); }
+
+  .shimmer { background: linear-gradient(100deg, #163E49 30%, #1d4d59 50%, #163E49 70%);
+    background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
+  @keyframes shimmer { from { background-position: 200% 0 } to { background-position: -200% 0 } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tideline svg, .shimmer { animation: none; }
+  }
+</style>
+</head>
+<body class="font-ui text-mist antialiased">
+
+<!-- ================= LANDING ================= -->
+<section>
+  <header class="max-w-5xl mx-auto px-6 pt-6 flex items-center justify-between">
+    <div class="font-read text-lg tracking-tight text-mist">tide<span class="text-amber">.</span></div>
+    <nav class="flex gap-6 text-sm text-mute">
+      <a class="hover:text-mist transition" href="#results">Search</a>
+      <a class="hover:text-mist transition" href="#">AI Insights</a>
+    </nav>
+  </header>
+
+  <div class="max-w-3xl mx-auto px-6 pt-24 pb-16 text-center">
+    <p class="text-amber/90 text-xs tracking-[0.3em] uppercase mb-6">Real-time news, read calmly</p>
+    <h1 class="font-read text-5xl sm:text-6xl leading-[1.05] mb-8 text-mist">
+      Read the <span class="italic text-foam">current</span>.
+    </h1>
+    <p class="text-mute max-w-xl mx-auto mb-10">
+      Search what's happening now, then let Tide summarize it and read its mood — from calm to turbulent.
+    </p>
+
+    <form class="relative max-w-xl mx-auto" onsubmit="return false">
+      <input type="text" value="renewable energy"
+        class="w-full bg-navy2/70 border border-foam/20 rounded-2xl pl-5 pr-28 py-4 text-mist placeholder-mute focus:outline-none focus:border-foam focus:ring-4 focus:ring-foam/15 transition"
+        placeholder="Search the news…" />
+      <button class="absolute right-2 top-1/2 -translate-y-1/2 bg-foam text-navy font-semibold rounded-xl px-5 py-2.5 hover:brightness-110 transition">
+        Search
+      </button>
+    </form>
+
+    <div class="tideline max-w-xl mx-auto mt-3 opacity-70">
+      <svg viewBox="0 0 1200 18" preserveAspectRatio="none" fill="none">
+        <path d="M0 10 Q 75 2 150 10 T 300 10 T 450 10 T 600 10 T 750 10 T 900 10 T 1050 10 T 1200 10"
+          stroke="#5BA6A0" stroke-width="2"/>
+      </svg>
+    </div>
+
+    <div class="mt-7 flex items-center justify-center gap-3 text-sm text-mute">
+      <span>Try:</span>
+      <button class="px-3 py-1 rounded-full border border-foam/15 hover:border-foam/50 hover:text-mist transition">elections</button>
+      <button class="px-3 py-1 rounded-full border border-foam/15 hover:border-foam/50 hover:text-mist transition">AI</button>
+      <button class="px-3 py-1 rounded-full border border-foam/15 hover:border-foam/50 hover:text-mist transition">markets</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RESULTS (with working Cards/List toggle) ================= -->
+<section id="results" class="max-w-5xl mx-auto px-6 pb-28" x-data="{ view: 'cards', filter: 'all' }">
+  <div class="border-t border-foam/15 pt-8">
+
+    <!-- toolbar -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+      <div>
+        <h2 class="font-read text-2xl text-mist">Results for “renewable energy”</h2>
+        <p class="text-mute text-sm mt-1">38 articles · last 24 hours</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 text-sm text-mute">
+          <label>Sort</label>
+          <select class="bg-navy2 border border-foam/20 rounded-lg px-3 py-1.5 text-mist focus:outline-none focus:border-foam">
+            <option>Newest</option><option>Most relevant</option><option>Sentiment</option>
+          </select>
+        </div>
+        <div class="flex bg-navy2 border border-foam/20 rounded-lg p-1">
+          <button @click="view='cards'" :class="view==='cards' ? 'bg-foam text-navy font-semibold' : 'text-mute hover:text-mist'" class="px-3 py-1.5 rounded-md text-sm transition">Cards</button>
+          <button @click="view='list'"  :class="view==='list'  ? 'bg-foam text-navy font-semibold' : 'text-mute hover:text-mist'" class="px-3 py-1.5 rounded-md text-sm transition">List</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- filters -->
+    <div class="flex flex-wrap gap-2 mb-8 text-sm">
+      <template x-for="f in [['all','All sources'],['calm','Calm'],['neutral','Neutral'],['turbulent','Turbulent'],['analyzed','Analyzed only']]" :key="f[0]">
+        <button @click="filter=f[0]"
+          :class="filter===f[0] ? 'bg-foam/15 text-foam border-foam/30' : 'border-foam/15 text-mute hover:text-mist hover:border-foam/30'"
+          class="px-3 py-1.5 rounded-full border transition" x-text="f[1]"></button>
+      </template>
+    </div>
+
+    <!-- ===== CARD VIEW ===== -->
+    <div x-show="view==='cards'" class="grid sm:grid-cols-2 gap-5">
+      <article class="glow-calm bg-navy2/55 rounded-2xl p-5 border border-foam/5">
+        <div class="flex items-center justify-between text-xs text-mute mb-3">
+          <span>The Atlantic · 2h ago</span><span class="text-foam">● Calm</span>
+        </div>
+        <h3 class="font-read text-xl leading-snug text-mist mb-3">Nations agree on landmark fund to accelerate clean energy</h3>
+        <div class="bg-navy/50 rounded-xl p-3 mb-3 border border-foam/5">
+          <p class="text-[11px] tracking-wider uppercase text-amber/80 mb-1.5">AI summary</p>
+          <p class="text-sm text-mist/85 leading-relaxed">30 countries committed $80B toward grid modernization, payouts tied to verified emissions cuts. The verification clause is the real breakthrough.</p>
+        </div>
+        <div class="spectrum mb-3"><span class="marker" style="left:12%"></span></div>
+        <div class="flex items-center justify-between">
+          <a class="text-sm text-foam hover:underline">Read original →</a>
+          <span class="text-xs text-mute">summarized in 2.1s</span>
+        </div>
+      </article>
+
+      <article class="glow-neu bg-navy2/55 rounded-2xl p-5 border border-foam/5">
+        <div class="flex items-center justify-between text-xs text-mute mb-3">
+          <span>Reuters · 40m ago</span>
+          <span class="inline-flex items-center gap-1.5 text-foam">
+            <svg class="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" stroke-dasharray="42" stroke-linecap="round"/></svg>
+            Reading the mood…
+          </span>
+        </div>
+        <h3 class="font-read text-xl leading-snug text-mist mb-3">Central banks weigh climate risk in new stress tests</h3>
+        <div class="space-y-2 mb-3">
+          <div class="shimmer h-3 rounded w-full"></div>
+          <div class="shimmer h-3 rounded w-11/12"></div>
+          <div class="shimmer h-3 rounded w-2/3"></div>
+        </div>
+        <p class="text-xs text-mute">Keep browsing — this card updates itself when ready.</p>
+      </article>
+
+      <article class="glow-turb bg-navy2/55 rounded-2xl p-5 border border-foam/5">
+        <div class="flex items-center justify-between text-xs text-mute mb-3">
+          <span>Bloomberg · 5h ago</span><span class="text-coral">● Turbulent</span>
+        </div>
+        <h3 class="font-read text-xl leading-snug text-mist mb-3">Drought pushes regional crop yields to a decade low</h3>
+        <div class="bg-navy/50 rounded-xl p-3 mb-3 border border-foam/5">
+          <p class="text-[11px] tracking-wider uppercase text-amber/80 mb-1.5">AI summary</p>
+          <p class="text-sm text-mist/85 leading-relaxed">Persistent drought cut staple yields ~18% YoY, straining food prices; officials warn of knock-on effects without near-term irrigation.</p>
+        </div>
+        <div class="spectrum mb-3"><span class="marker" style="left:88%"></span></div>
+        <div class="flex items-center justify-between">
+          <a class="text-sm text-foam hover:underline">Read original →</a>
+          <span class="text-xs text-mute">summarized in 1.8s</span>
+        </div>
+      </article>
+
+      <article class="bg-navy2/35 rounded-2xl p-5 border border-foam/5">
+        <div class="flex items-center justify-between text-xs text-mute mb-3">
+          <span>The Guardian · 1h ago</span><span class="text-mute">Not analyzed</span>
+        </div>
+        <h3 class="font-read text-xl leading-snug text-mist mb-4">City unveils plan to plant two million trees by 2030</h3>
+        <button class="w-full border border-amber/40 text-amber rounded-xl py-2.5 text-sm font-semibold hover:bg-amber/10 transition">
+          Summarize &amp; read mood
+        </button>
+      </article>
+    </div>
+
+    <!-- ===== LIST VIEW ===== -->
+    <div x-show="view==='list'" x-cloak class="divide-y divide-foam/10 border-y border-foam/10">
+      <article class="py-5 grid grid-cols-[1fr_auto] gap-6 items-start">
+        <div>
+          <div class="flex items-center gap-3 text-xs text-mute mb-2"><span>The Atlantic · 2h ago</span><span class="text-foam">● Calm</span></div>
+          <h3 class="font-read text-xl leading-snug text-mist mb-2">Nations agree on landmark fund to accelerate clean energy</h3>
+          <p class="text-sm text-mist/80 leading-relaxed max-w-2xl"><span class="text-[11px] tracking-wider uppercase text-amber/80 mr-1">Summary</span>30 countries committed $80B toward grid modernization, payouts tied to verified emissions cuts.</p>
+          <div class="spectrum max-w-xs mt-3"><span class="marker" style="left:12%"></span></div>
+        </div>
+        <a class="text-sm text-foam hover:underline whitespace-nowrap pt-1">Read →</a>
+      </article>
+      <article class="py-5 grid grid-cols-[1fr_auto] gap-6 items-start">
+        <div class="w-full">
+          <div class="flex items-center gap-3 text-xs text-mute mb-2"><span>Reuters · 40m ago</span>
+            <span class="inline-flex items-center gap-1.5 text-foam"><svg class="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" stroke-dasharray="42" stroke-linecap="round"/></svg>Reading the mood…</span></div>
+          <h3 class="font-read text-xl leading-snug text-mist mb-3">Central banks weigh climate risk in new stress tests</h3>
+          <div class="space-y-2 max-w-2xl"><div class="shimmer h-3 rounded w-full"></div><div class="shimmer h-3 rounded w-10/12"></div><div class="shimmer h-3 rounded w-1/2"></div></div>
+        </div>
+        <span class="text-xs text-mute whitespace-nowrap pt-1">queued</span>
+      </article>
+      <article class="py-5 grid grid-cols-[1fr_auto] gap-6 items-start">
+        <div>
+          <div class="flex items-center gap-3 text-xs text-mute mb-2"><span>Bloomberg · 5h ago</span><span class="text-coral">● Turbulent</span></div>
+          <h3 class="font-read text-xl leading-snug text-mist mb-2">Drought pushes regional crop yields to a decade low</h3>
+          <p class="text-sm text-mist/80 leading-relaxed max-w-2xl"><span class="text-[11px] tracking-wider uppercase text-amber/80 mr-1">Summary</span>Persistent drought cut staple yields ~18% YoY, straining food prices.</p>
+          <div class="spectrum max-w-xs mt-3"><span class="marker" style="left:88%"></span></div>
+        </div>
+        <a class="text-sm text-foam hover:underline whitespace-nowrap pt-1">Read →</a>
+      </article>
+      <article class="py-5 grid grid-cols-[1fr_auto] gap-6 items-center">
+        <div>
+          <div class="flex items-center gap-3 text-xs text-mute mb-2"><span>The Guardian · 1h ago</span><span class="text-mute">Not analyzed</span></div>
+          <h3 class="font-read text-xl leading-snug text-mist">City unveils plan to plant two million trees by 2030</h3>
+        </div>
+        <button class="border border-amber/40 text-amber rounded-xl px-4 py-2 text-sm font-semibold hover:bg-amber/10 transition whitespace-nowrap">Summarize &amp; read mood</button>
+      </article>
+    </div>
+
+  </div>
+</section>
+
+<footer class="border-t border-foam/15">
+  <div class="max-w-5xl mx-auto px-6 py-8 text-sm text-mute flex justify-between">
+    <span>tide · read the current</span><span>mockup — blend (Tide × Dusk)</span>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}AI Insights — Aries News{% endblock %}
+
+{% block content %}
+<section class="results" x-data="{ filter: 'all' }">
+  <div class="results__head">
+    <div>
+      <h2>AI Insights</h2>
+      <p class="results__count">{{ items|length }} analyzed article{{ '' if items|length == 1 else 's' }}</p>
+    </div>
+    <div class="chips" role="group" aria-label="Filter by sentiment">
+      {% for key, label in [('all', 'All'), ('positive', 'Positive'), ('neutral', 'Neutral'), ('negative', 'Negative')] %}
+      <button class="chip" type="button"
+        :class="filter === '{{ key }}' && 'is-active'"
+        @click="filter = '{{ key }}'">{{ label }}</button>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if not items %}
+    <div class="notice">
+      No analyses yet. <strong>Search</strong> for news and analyze an article to see it here.
+    </div>
+  {% else %}
+  <div class="results-grid">
+    {% for item in items %}
+      {% set a = item.a %}{% set ins = item.ins %}
+      <article
+        class="card{% if ins.status == 'done' %} is-analyzed{% endif %}"
+        {% if ins.status == 'done' %}style="--halo: {{ halo_color(ins.score) }}"{% endif %}
+        data-sentiment="{% if ins.status == 'done' %}{{ ins.sentiment }}{% else %}none{% endif %}"
+        x-show="filter === 'all' || filter === $el.dataset.sentiment"
+      >
+        <div class="card__meta">
+          <span>{{ a.source }}{% if a.published_at %} · {{ format_published(a.published_at) }}{% endif %}</span>
+          {% include "partials/_status_label.html" %}
+        </div>
+        <h3 class="card__title">{{ a.title }}</h3>
+        {% if ins.status == 'done' %}
+          {% include "partials/_summary.html" %}
+          {% include "partials/_spectrum.html" %}
+          <div class="card__foot">
+            <a href="{{ a.url }}" target="_blank" rel="noopener">Read original →</a>
+            {% if ins.timing_ms %}<span class="card__time">summarized in {{ seconds(ins.timing_ms) }}</span>{% endif %}
+          </div>
+        {% elif ins.status == 'failed' %}
+          <p class="card__time">{{ ins.error or 'Analysis failed.' }}</p>
+        {% else %}
+          {% include "partials/_shimmer.html" %}
+          <p class="card__time">Analysis in progress…</p>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

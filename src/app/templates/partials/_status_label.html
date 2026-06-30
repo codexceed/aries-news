@@ -1,0 +1,9 @@
+{% if ins and ins.status == 'done' %}
+  <span class="sentiment sentiment--{{ ins.sentiment }}">{{ ins.sentiment|capitalize }}</span>
+{% elif ins and ins.status in ('pending', 'running') %}
+  <span class="busy"><span class="spinner"></span>Analyzing…</span>
+{% elif ins and ins.status == 'failed' %}
+  <span style="color: var(--neg)">Failed</span>
+{% else %}
+  <span style="color: var(--muted)">Not analyzed</span>
+{% endif %}

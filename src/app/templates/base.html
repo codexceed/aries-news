@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Aries News{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/app.css" />
+    <script defer src="/static/js/htmx.min.js"></script>
+    <script defer src="/static/js/htmx-ext-sse.js"></script>
+    <script defer src="/static/js/alpine.min.js"></script>
+  </head>
+  <body hx-ext="sse">
+    <header class="site-header">
+      <a class="brand" href="/">dusk<b>.</b></a>
+      <nav class="nav">
+        <a href="/search" {% if active=='search' %}aria-current="page"{% endif %}>Search</a>
+        <a href="/insights" {% if active=='insights' %}aria-current="page"{% endif %}>AI Insights</a>
+      </nav>
+    </header>
+
+    {% block content %}{% endblock %}
+
+    <footer class="site-footer">
+      <div class="container">
+        <span>dusk · reading room</span>
+        <span>Aries News</span>
+      </div>
+    </footer>
+  </body>
+</html>

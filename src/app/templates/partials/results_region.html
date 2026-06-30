@@ -1,0 +1,40 @@
+{#- Toolbar + results. Re-rendered on its own for HTMX view/sort changes. -#}
+<div class="results__head">
+  <div>
+    <h2>Results{% if query %} for “{{ query }}”{% endif %}</h2>
+    <p class="results__count">{{ articles|length }} article{{ '' if articles|length == 1 else 's' }}</p>
+  </div>
+  <form class="toolbar" onsubmit="return false">
+    <input type="hidden" name="q" value="{{ query }}" />
+    <input type="hidden" name="view" value="{{ view }}" />
+    <label class="field">
+      Sort
+      <select name="sort" hx-get="/search" hx-include="closest form"
+        hx-target="#results-region" hx-swap="innerHTML" hx-push-url="true">
+        <option value="relevance" {% if sort == 'relevance' %}selected{% endif %}>Relevant</option>
+        <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+        <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest</option>
+      </select>
+    </label>
+    <div class="view-toggle" role="group" aria-label="Result view">
+      <button type="button" class="{% if view == 'cards' %}is-active{% endif %}"
+        hx-get="/search?q={{ query|urlencode }}&sort={{ sort }}&view=cards"
+        hx-target="#results-region" hx-swap="innerHTML" hx-push-url="true">Cards</button>
+      <button type="button" class="{% if view == 'list' %}is-active{% endif %}"
+        hx-get="/search?q={{ query|urlencode }}&sort={{ sort }}&view=list"
+        hx-target="#results-region" hx-swap="innerHTML" hx-push-url="true">List</button>
+    </div>
+  </form>
+</div>
+
+{% if error %}
+  <div class="notice"><strong>{{ error }}</strong></div>
+{% elif not articles %}
+  <div class="notice">
+    {% if query %}No results for “{{ query }}”.{% else %}Search for a topic to see today’s headlines.{% endif %}
+  </div>
+{% else %}
+  <div class="{% if view == 'cards' %}results-grid{% else %}list{% endif %}">
+    {% for a in articles %}{% set ins = none %}{% include "partials/article.html" %}{% endfor %}
+  </div>
+{% endif %}

@@ -1,0 +1,4 @@
+<div class="spectrum{% if compact|default(false) %} spectrum--sm{% endif %}" role="img"
+  aria-label="Sentiment: {{ ins.sentiment }} ({{ '%.2f'|format(ins.score) }})">
+  <span class="spectrum__marker" style="left: {{ '%.1f'|format(marker_percent(ins.score)) }}%"></span>
+</div>

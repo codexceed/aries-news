@@ -1,0 +1,63 @@
+{#- One article in search results: card or list row, across all states.
+    `a` = ArticleBase, `ins` = InsightRead | None, `view` = 'cards' | 'list'.
+    While analyzing, the element connects to its SSE stream and swaps itself
+    with the finished card when the job completes. -#}
+{% set slug = article_slug(a.url) %}
+{% set status = ins.status if ins else none %}
+{% set analyzing = status in ('pending', 'running') %}
+{% set done = status == 'done' %}
+{% set failed = status == 'failed' %}
+
+{% if view == 'list' %}
+<article id="art-{{ slug }}" class="row"
+  {% if analyzing %}sse-connect="/insight/{{ ins.id }}/stream?view=list" sse-swap="message" hx-swap="outerHTML"{% endif %}>
+  <span class="row__accent" style="background: {{ halo_color(ins.score) if done else 'var(--neu)' }}"></span>
+  <div>
+    <div class="card__meta" style="justify-content: flex-start; gap: 12px">
+      <span>{{ a.source }}{% if a.published_at %} · {{ format_published(a.published_at) }}{% endif %}</span>
+      {% include "partials/_status_label.html" %}
+    </div>
+    <h3 class="row__title">{{ a.title }}</h3>
+    {% if done %}
+      <p class="row__summary"><span class="summary__label">Summary</span>{{ ins.summary }}</p>
+      {% set compact = true %}{% include "partials/_spectrum.html" %}
+    {% elif analyzing %}
+      <div style="max-width: 40rem">{% include "partials/_shimmer.html" %}</div>
+      <p class="card__time">Keep browsing — this row updates itself when ready.</p>
+    {% elif failed %}
+      <p class="card__time">{{ ins.error or 'Analysis failed.' }}</p>
+      {% set label = 'Try again' %}{% include "partials/_analyze_form.html" %}
+    {% else %}
+      {% include "partials/_analyze_form.html" %}
+    {% endif %}
+  </div>
+  <div>{% if done %}<a href="{{ a.url }}" target="_blank" rel="noopener">Read →</a>{% endif %}</div>
+</article>
+
+{% else %}
+<article id="art-{{ slug }}" class="card{% if done %} is-analyzed{% endif %}"
+  {% if done %}style="--halo: {{ halo_color(ins.score) }}"{% endif %}
+  {% if analyzing %}sse-connect="/insight/{{ ins.id }}/stream?view=cards" sse-swap="message" hx-swap="outerHTML"{% endif %}>
+  <div class="card__meta">
+    <span>{{ a.source }}{% if a.published_at %} · {{ format_published(a.published_at) }}{% endif %}</span>
+    {% include "partials/_status_label.html" %}
+  </div>
+  <h3 class="card__title">{{ a.title }}</h3>
+  {% if done %}
+    {% include "partials/_summary.html" %}
+    {% include "partials/_spectrum.html" %}
+    <div class="card__foot">
+      <a href="{{ a.url }}" target="_blank" rel="noopener">Read original →</a>
+      {% if ins.timing_ms %}<span class="card__time">summarized in {{ seconds(ins.timing_ms) }}</span>{% endif %}
+    </div>
+  {% elif analyzing %}
+    {% include "partials/_shimmer.html" %}
+    <p class="card__time">Keep browsing — this card updates itself when ready.</p>
+  {% elif failed %}
+    <p class="card__time">{{ ins.error or 'Analysis failed.' }}</p>
+    {% set label = 'Try again' %}{% include "partials/_analyze_form.html" %}
+  {% else %}
+    {% include "partials/_analyze_form.html" %}
+  {% endif %}
+</article>
+{% endif %}

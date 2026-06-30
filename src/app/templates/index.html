@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Aries News — read the day, understand the mood{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">A calmer way to read the news</p>
+  <h1>Read the day,<br /><em>understand</em> the mood.</h1>
+  <p class="lede">
+    Search real-time headlines, then let the room summarize and read the
+    sentiment of anything worth your attention.
+  </p>
+
+  <form class="search" action="/search" method="get" role="search">
+    <input
+      class="search__input"
+      type="text"
+      name="q"
+      value="{{ query|default('') }}"
+      placeholder="Search the news…"
+      aria-label="Search the news"
+      autofocus
+    />
+    <button class="search__submit" type="submit">Search</button>
+  </form>
+
+  <div class="chips chips--center">
+    <span style="color: var(--muted); font-size: 0.85rem">Try:</span>
+    {% for term in suggestions %}
+    <a class="chip" href="/search?q={{ term|urlencode }}">{{ term }}</a>
+    {% endfor %}
+  </div>
+
+  {# v2: a "Latest" section of pre-fetched headlines will sit here, below the
+     search, so the landing is useful before the user types anything. #}
+</section>
+{% endblock %}

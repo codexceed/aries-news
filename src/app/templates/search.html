@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ query or 'Search' }} — Aries News{% endblock %}
+
+{% block content %}
+<section class="results">
+  <form class="search" action="/search" method="get" role="search" style="margin: 8px auto 0">
+    <input
+      class="search__input"
+      type="text"
+      name="q"
+      value="{{ query }}"
+      placeholder="Search the news…"
+      aria-label="Search the news"
+    />
+    <button class="search__submit" type="submit">Search</button>
+  </form>
+
+  <div id="results-region">
+    {% include "partials/results_region.html" %}
+  </div>
+</section>
+{% endblock %}

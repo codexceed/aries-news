@@ -1,0 +1,10 @@
+<form hx-post="/analyze" hx-target="#art-{{ slug }}" hx-swap="outerHTML">
+  <input type="hidden" name="url" value="{{ a.url }}" />
+  <input type="hidden" name="title" value="{{ a.title }}" />
+  <input type="hidden" name="source" value="{{ a.source }}" />
+  <input type="hidden" name="description" value="{{ a.description or '' }}" />
+  <input type="hidden" name="image_url" value="{{ a.image_url or '' }}" />
+  <input type="hidden" name="published_at" value="{{ a.published_at.isoformat() if a.published_at else '' }}" />
+  <input type="hidden" name="view" value="{{ view }}" />
+  <button class="btn-analyze" type="submit">{{ label|default('Summarize & analyze sentiment') }}</button>
+</form>

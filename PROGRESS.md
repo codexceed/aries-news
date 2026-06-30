@@ -27,7 +27,8 @@ Legend: ✅ done · 🔄 in progress · ⏳ pending
 
 ## 3. Backend core ✅
 - [x] `core/config.py` — pydantic-settings `Settings` + cached singleton
-<!-- - [x] `core/db.py` — async engine, `AsyncSession` factory, `Base`, naming -->
+      (coerces platform `postgres://` URLs to the async driver)
+- [x] `core/db.py` — async engine, `AsyncSession` factory, `Base`, naming
       convention
 - [x] `core/enums.py` — `JobStatus`, `Sentiment` (StrEnum)
 - [x] `core/url.py` — `normalize_url` idempotency key
@@ -56,7 +57,7 @@ Legend: ✅ done · 🔄 in progress · ⏳ pending
 - [x] Unit tests written (mocked OpenAI green; DB-backed reaper/claim/idempotency
       ⏳ deferred until Postgres is up)
 
-## 6. Frontend ✅ (code-complete; end-to-end run pending Postgres)
+## 6. Frontend ✅
 - [x] Jinja2 `base.html` + hand-authored design CSS (no runtime Tailwind/CDN)
 - [x] Vendored htmx + htmx-sse + Alpine (local, fast, offline)
 - [x] `core/sentiment.py` — pure marker%/gradient-sampled halo helper
@@ -65,17 +66,16 @@ Legend: ✅ done · 🔄 in progress · ⏳ pending
 - [x] AI Insights page — stored results, spectrum bar + halo, Alpine sentiment filter
 - [x] HTMX wiring (analyze → pending fragment → SSE terminal swap)
 - [x] Offline render check passes (all templates + halo/spectrum/sse invariants)
-- [ ] 🎯 **Milestone: app runs end-to-end locally (`make run`)** — needs Postgres
+- [x] 🎯 **Milestone: app runs end-to-end locally (`make run`)** — verified
 
-## 7. Tests 🔄
+## 7. Tests ✅
 - [x] News service unit tests (13)
 - [x] OpenAI client unit tests (mocked, 4)
-- [x] `hypothesis` property tests — URL normalization (`test_url.py`), sentiment
-      mapping (`test_sentiment.py`)
-- [x] `conftest.py` — test DB session + ASGI client fixtures
-- [x] Insights/JobQueue/reaper unit tests written (transactional DB fixture)
-- [ ] Run the DB-backed insights tests (need Postgres)
-- [ ] **One Playwright smoke test** — render UI + analyze/SSE flow (needs running app)
+- [x] `hypothesis` property tests — URL normalization, sentiment, config coercion
+- [x] `conftest.py` — test DB session + ASGI client fixtures; `db` auto-marker
+- [x] Insights/JobQueue/reaper DB tests — passing against Postgres
+- [x] **Playwright smoke** — landing + AI Insights card/halo/spectrum + filter
+- [x] Full suite green: 39 unit/integration + 2 e2e; `make check` clean
 
 ## 8. Docs ✅
 - [x] `ARCHITECTURE.md` — overview, flows, data model, state machine, SSE,
@@ -86,18 +86,23 @@ Legend: ✅ done · 🔄 in progress · ⏳ pending
 - [x] `README.md` — full setup/run/test
 - [ ] Final sweep once the app is verified end-to-end
 
-## 9. Infra & deploy (LAST) ⏳
-- [ ] App `Dockerfile`
-- [ ] `.pre-commit-config.yaml` (lint + fast test subset)
-- [ ] `.github/workflows/` — CI (lint + typecheck + test), release + changelog
-- [ ] Deploy (Render / Railway / Vercel) — live link
-- [ ] Repo handover (invite `nicholas-greenwood`, `mohammad-chaudry`)
+## 9. Infra & deploy (LAST) 🔄
+- [x] App `Dockerfile` + `.dockerignore` — image builds, migrates, and serves
+- [x] `.pre-commit-config.yaml` — ruff + pyright + fast no-DB tests
+- [x] `.github/workflows/ci.yml` — ruff + pyright + pylint + tests (Postgres) + e2e
+      — **green on GitHub**
+- [x] `.github/workflows/release.yml` — release-please
+- [x] `render.yaml` — Render Blueprint (Docker web + managed Postgres)
+- [x] Repo on GitHub — public: github.com/codexceed/aries-news
+- [ ] Enable "Actions may create PRs" so release-please can open its release PR
+- [ ] Deploy on Render → live link
+- [x] Handover — public repo link (no invites needed)
 
 ---
 
 ### Current focus
-The app is **code-complete and statically verified** (ruff, pyright strict,
-pylint 10/10, 25 no-DB tests green). The remaining work is gated on a running
-**PostgreSQL** (Docker): apply migrations, run the DB-backed insights tests,
-bring the app up with `make run`, verify the search → analyze → SSE flow, and
-add the Playwright smoke. Infra/deploy (phase 9) follows once that's confirmed.
+Build complete and **green on CI** (ruff, pyright strict, pylint 10/10, 39
+unit/integration tests + Playwright e2e). Two outstanding, both needing the repo
+owner: (1) enable the Actions-create-PRs setting so the release workflow can run;
+(2) connect the repo on Render (blueprint ready) with real `GNEWS_API_KEY` +
+`OPENAI_API_KEY` for the live link.

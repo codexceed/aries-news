@@ -9,6 +9,7 @@ same job and what recovers jobs orphaned by a crash.
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select, update
@@ -20,6 +21,8 @@ from app.core.enums import JobStatus
 from app.core.url import normalize_url
 from app.models import Article, Insight
 from app.schemas import AnalysisResult, ArticleBase
+
+logger = logging.getLogger(__name__)
 
 
 async def upsert_article(session: AsyncSession, article: ArticleBase) -> Article:
@@ -89,6 +92,9 @@ async def get_or_create_pending_insight(session: AsyncSession, article: ArticleB
     insight = result.scalar_one()
 
     if insight.status == JobStatus.FAILED:
+        # Record the failure for observability, then clear it so the retry
+        # starts clean (the prior error is not carried into the new attempt).
+        logger.info("retrying insight %d; previous error: %s", insight.id, insight.error)
         insight.status = JobStatus.PENDING
         insight.error = None
         insight.summary = None

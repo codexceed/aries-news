@@ -69,11 +69,15 @@ public-interface change — the same bar that warrants an ADR), don't just hand
 over the PR link. Present the user a **brief, visually rich** summary in the
 chat:
 
-- **Architecture** — a small Mermaid (or ASCII) diagram of the components the
-  change touches and how they relate.
-- **Flow** — a sequence/flow diagram of the new runtime path (request → … →
-  result).
+- **Architecture** — a small **ASCII** diagram of the components the change
+  touches and how they relate.
+- **Flow** — an **ASCII** sequence/flow diagram of the new runtime path
+  (request → … → result).
 - **Example** — one concrete walkthrough: sample input → what happens → output.
+
+Use **ASCII art, not Mermaid** — the chat renders in a terminal that cannot
+display Mermaid. (Mermaid is fine inside the markdown docs such as
+`ARCHITECTURE.md`, which are read in a browser.)
 
 Keep it skimmable, not a wall of text. Then ask the user **2–4 short follow-up
 questions** that check and deepen their understanding (trade-offs taken, edge

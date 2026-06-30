@@ -39,6 +39,29 @@ Context for anyone — human or AI — working in this repo. It is intentionally
   rather than hiding them — preserve that. If you change the async/worker
   design, update both ARCHITECTURE.md §7 and ADR-0001.
 
+## Git & pull requests
+
+`main` is protected: **no direct pushes** — land every change through a pull
+request, and the **`quality` CI check must pass** before merge. History is
+**linear**, so merge with **squash** or **rebase**, never a merge commit. (The
+repo owner can bypass these for the occasional hotfix.)
+
+- **Branch** off `main`: `git switch -c <type>/<short-topic>` (e.g.
+  `feat/insights-filter`, `fix/url-normalization`).
+- **Conventional Commits** for every commit message and the PR title:
+  `type(scope): summary`, where `type` is one of `feat`, `fix`, `docs`,
+  `refactor`, `test`, `ci`, `chore`, `perf`. These drive release-please's
+  version bump + `CHANGELOG.md`.
+- **`make check` green before you push.** The pre-commit hook runs ruff +
+  pyright + the fast (no-DB) tests on commit; CI re-runs the full gate.
+- **PR body** follows [`.github/pull_request_template.md`](.github/pull_request_template.md).
+  Keep it **brief** — PRs are reference for human readers:
+  - **Description** — one-line overview of the change.
+  - **Motivation** — why it's needed.
+  - **Changes** — bulleted list of what changed.
+  - **Testing** — how it was verified.
+- Reference an ADR when the change is architectural (see Non-negotiables).
+
 ## Where things live
 
 The layering and full tree are in

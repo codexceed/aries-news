@@ -52,14 +52,19 @@ def _sort_articles(articles: list[ArticleBase], sort: str) -> list[ArticleBase]:
 
     Args:
         articles: The fetched articles.
-        sort: ``"newest"``, ``"oldest"``, or anything else for provider order.
+        sort: ``"newest"``, ``"oldest"``, ``"source"`` (by source name, A-Z), or
+            anything else for provider order.
 
     Returns:
         The (possibly) reordered list. Provider relevance order is preserved for
         unknown sort keys.
     """
-    if sort not in {"newest", "oldest"}:
+    if sort not in {"newest", "oldest", "source"}:
         return articles
+
+    if sort == "source":
+        return sorted(articles, key=lambda a: a.source.lower())
+
     epoch = datetime.fromtimestamp(0, tz=None)
 
     def key(article: ArticleBase) -> datetime:
@@ -128,7 +133,8 @@ async def search(
         news: The injected news service.
         q: The free-text query.
         view: ``"cards"`` or ``"list"``.
-        sort: ``"relevance"`` (default), ``"newest"``, or ``"oldest"``.
+        sort: ``"relevance"`` (default), ``"newest"``, ``"oldest"``, or
+            ``"source"`` (by source name, A-Z).
 
     Returns:
         The full search page, or the ``#results-region`` fragment when the

@@ -17,12 +17,10 @@ import asyncio
 import contextlib
 import logging
 import time
-from collections.abc import AsyncIterator
 from dataclasses import dataclass
 
 from app.core.config import Settings, get_settings
 from app.core.db import SessionFactory
-from app.core.enums import JobStatus
 from app.models import Article
 from app.repositories import insights as repo
 from app.schemas import ArticleBase, InsightRead
@@ -31,7 +29,6 @@ from app.services.openai_client import analyze_article
 logger = logging.getLogger(__name__)
 
 _IDLE_POLL_SECONDS = 1.0
-_TERMINAL = (JobStatus.DONE, JobStatus.FAILED)
 
 
 @dataclass(frozen=True)
@@ -128,25 +125,6 @@ class JobQueue:
         subscribers.discard(queue)
         if not subscribers:
             del self._subscribers[insight_id]
-
-    async def subscribe(self, insight_id: int) -> AsyncIterator[InsightRead]:
-        """Yield status updates for an insight until it reaches a terminal state.
-
-        Args:
-            insight_id: The insight to stream.
-
-        Yields:
-            Each published :class:`InsightRead`, ending after ``DONE``/``FAILED``.
-        """
-        queue = self.subscribe_queue(insight_id)
-        try:
-            while True:
-                insight = await queue.get()
-                yield insight
-                if insight.status in _TERMINAL:
-                    return
-        finally:
-            self.unsubscribe(insight_id, queue)
 
     async def _publish(self, insight: InsightRead) -> None:
         """Push an update to every subscriber of its insight.

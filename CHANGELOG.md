@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/codexceed/aries-news/compare/v0.2.0...v0.2.1) (2026-07-01)
+
+
+### Documentation
+
+* sync ARCHITECTURE with Bauhaus UI, SSE pub/sub, and auto-retry ([#12](https://github.com/codexceed/aries-news/issues/12)) ([18c7c9f](https://github.com/codexceed/aries-news/commit/18c7c9f80ef98e97d65d68191224c614751ae74c))
+
 ## [0.2.0](https://github.com/codexceed/aries-news/compare/v0.1.0...v0.2.0) (2026-07-01)
 
 

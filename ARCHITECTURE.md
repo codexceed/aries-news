@@ -18,7 +18,7 @@ rather than hidden.
 ```mermaid
 flowchart TB
     subgraph Browser["Browser — server-rendered"]
-        UI["Jinja2 + HTMX + Alpine.js + Tailwind"]
+        UI["Jinja2 + HTMX + Alpine.js<br/>hand-authored CSS (Bauhaus light/dark)"]
     end
 
     subgraph App["FastAPI (async, single process)"]
@@ -62,7 +62,7 @@ flowchart TB
 | AI | OpenAI SDK, model `gpt-4.1-nano` |
 | Background work | in-process `asyncio` worker + DB-backed job rows |
 | UI streaming | Server-Sent Events (`sse-starlette`) |
-| Frontend | Jinja2 + HTMX + Alpine.js + Tailwind |
+| Frontend | Jinja2 + HTMX + Alpine.js + hand-authored CSS (Bauhaus light/dark theme) |
 
 The rationale and the alternatives weighed are recorded in
 [`docs/adr/0001-stack-and-async.md`](docs/adr/0001-stack-and-async.md).
@@ -254,7 +254,7 @@ stateDiagram-v2
     running --> done: OpenAI ok
     running --> failed: error (attempts++)
     running --> pending: startup reaper<br/>(stale > INSIGHTS_STALE_AFTER_SECONDS)
-    failed --> pending: manual / future retry
+    failed --> pending: re-request analysis<br/>(auto-reset on the same article)
     done --> [*]
 ```
 
@@ -271,7 +271,9 @@ stateDiagram-v2
 - **Startup reaper.** A job left `running` (process killed mid-call) would
   otherwise hang forever. On startup the reaper re-queues every insight stuck in
   `running` longer than `insights_stale_after_seconds` (default 120) back to
-  `pending`, so a deploy restart self-heals. `attempts` bounds retry loops.
+  `pending`, so a deploy restart self-heals. Re-requesting a `failed` article
+  auto-resets it to `pending` (a retry); `attempts` records how many times a job
+  has been claimed, for observability.
 - **DB-backed state.** Job state lives in Postgres, not process memory, so it
   survives a restart and is observable with plain SQL.
 
@@ -280,20 +282,23 @@ stateDiagram-v2
 ## 6. The SSE update path
 
 The browser keeps browsing while analysis runs. When a card is requested, HTMX
-opens an SSE connection; the server watches the insight's status (DB poll /
-in-process notification) and emits an event when it reaches a terminal state.
-HTMX swaps the shimmer placeholder for the rendered summary + sentiment.
+opens an SSE connection; the server subscribes to the insight via an **in-memory
+pub/sub** — the worker pushes each status change onto per-insight
+`asyncio.Queue` subscribers (`JobQueue._publish`), and the stream yields one
+event per change until the insight is terminal. HTMX swaps the shimmer
+placeholder for the rendered summary + sentiment.
 
 ```
-shimmer card  ──HTMX──▶  GET /insights/stream?article_id=…
+shimmer card  ──HTMX──▶  GET /api/insights/{id}/stream
                               │  (sse-starlette EventSourceResponse)
-                              │  server watches insight.status
-   status: pending/running ──▶  (heartbeat / no swap)
-   status: done/failed     ──▶  event → HTMX swaps card to result
+                              │  subscribe() → per-insight asyncio.Queue
+   worker publishes running ──▶  event (card stays in shimmer)
+   worker publishes done/failed ─▶  event → HTMX swaps card to result
 ```
 
-Polling is the documented fallback when SSE is unavailable. SSE is **per
-process** — see the limitation below.
+Delivery is push-based, not a DB poll: subscribers only ever receive events the
+worker pushes in-process. That makes SSE **per process** — see the limitation
+below.
 
 ---
 

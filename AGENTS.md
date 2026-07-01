@@ -52,8 +52,12 @@ repo owner can bypass these for the occasional hotfix.)
   `type(scope): summary`, where `type` is one of `feat`, `fix`, `docs`,
   `refactor`, `test`, `ci`, `chore`, `perf`. These drive release-please's
   version bump + `CHANGELOG.md`.
-- **`make check` green before you push.** The pre-commit hook runs ruff +
-  pyright + the fast (no-DB) tests on commit; CI re-runs the full gate.
+- **`make check` green before you open a PR.** It runs the full gate — lint +
+  typecheck + pylint + the complete `make test` suite (unit + integration). For a
+  change of **major size or risk**, additionally run **`make test-e2e`** (the
+  Playwright smoke) before opening the PR. The pre-commit hook runs a faster
+  subset (ruff + pyright + the no-DB tests) on commit; CI re-runs these same
+  `make` targets on the PR.
 - **PR body** follows [`.github/pull_request_template.md`](.github/pull_request_template.md).
   Keep it **brief** — PRs are reference for human readers:
   - **Description** — one-line overview of the change.
@@ -122,5 +126,11 @@ business logic in `services/`, HTTP concerns in `api/`.
 | `make test` / `make test-fast` / `make test-e2e` | full / fast / Playwright |
 | **`make check`** | lint + typecheck + pylint + tests (CI also runs the e2e smoke) — green before you push |
 
-All Python runs inside the `uv` environment. **Run `make check` before
-committing.**
+All Python runs inside the `uv` environment. **Run `make check` before opening a
+PR** (and `make test-e2e` for a major/risky change).
+
+These `make` targets are the project's **single source of truth** for how to
+install, run, test, and check it — **CI invokes the very same targets**, not
+hand-copied commands. So: reach for a target rather than a raw command, keep the
+recipe in the `Makefile` (not duplicated in a workflow), and when CI needs
+something new, add a target and call it from both places.

@@ -39,26 +39,28 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install dependencies
-        run: uv sync --extra dev
+      # The Makefile is the single source of truth for how to build/test/check
+      # the project; CI invokes the same targets rather than re-spelling them.
+      - name: Install dependencies (deps + Playwright browser)
+        run: make install
 
-      - name: Ruff lint
-        run: uv run ruff check src tests
+      - name: Lint (ruff check + format)
+        run: make lint
 
-      - name: Ruff format check
-        run: uv run ruff format --check src tests
-
-      - name: Pyright (strict)
-        run: uv run pyright
+      - name: Typecheck (pyright, strict)
+        run: make typecheck
 
       - name: Pylint
-        run: uv run pylint src/app
+        run: make pylint
 
       - name: Tests (unit + integration, with coverage)
-        run: uv run pytest -m "not e2e" --cov --cov-report=term-missing
+        run: make test
 
-      - name: Install Playwright browser
-        run: uv run playwright install --with-deps chromium
+      # Playwright's browser binary comes from `make install`; CI additionally
+      # needs its OS libraries — an environment-provisioning step, not a project
+      # command, so it stays out of the Makefile (it would break non-Linux devs).
+      - name: Install Playwright system dependencies
+        run: uv run playwright install-deps chromium
 
       - name: E2E smoke test
-        run: uv run pytest -m e2e
+        run: make test-e2e

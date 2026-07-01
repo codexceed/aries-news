@@ -39,7 +39,7 @@ Context for anyone — human or AI — working in this repo. It is intentionally
   rather than hiding them — preserve that. If you change the async/worker
   design, update both ARCHITECTURE.md §7 and ADR-0001.
 
-## Git & pull requests
+## Commits, Git & pull requests
 
 `main` is protected: **no direct pushes** — land every change through a pull
 request, and the **`quality` CI check must pass** before merge. History is
@@ -61,6 +61,7 @@ repo owner can bypass these for the occasional hotfix.)
   - **Changes** — bulleted list of what changed.
   - **Testing** — how it was verified.
 - Reference an ADR when the change is architectural (see Non-negotiables).
+- Author commits as the current user and don't reference claude code in PR descriptions.
 
 ### Explain a major change after opening its PR
 

@@ -2,7 +2,7 @@
 # Run `make help` for the list. All Python commands run inside the uv environment.
 
 .DEFAULT_GOAL := help
-.PHONY: help install db-up db-down migrate makemigration run format lint typecheck \
+.PHONY: help install db-up db-down db-reset migrate makemigration run format lint typecheck \
         pylint test test-fast test-e2e check clean
 
 UV := uv
@@ -23,6 +23,11 @@ db-up: ## Start the local Postgres container
 
 db-down: ## Stop the local Postgres container
 	docker compose down
+
+db-reset: db-up ## Rebuild the dev schema from scratch (DROPS ALL DATA), then migrate to head
+	docker compose exec -T db psql -U aries -d aries \
+		-c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+	$(UV) run alembic upgrade head
 
 migrate: ## Apply database migrations to the latest revision
 	$(UV) run alembic upgrade head

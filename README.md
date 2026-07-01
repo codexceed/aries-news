@@ -5,9 +5,10 @@ demand, store the results, and browse them on an **AI Insights** page.
 
 Built as an async, all-Python app: **FastAPI + HTMX + PostgreSQL**, with OpenAI
 (`gpt-4.1-nano`) for the analysis and [gnews.io](https://gnews.io) for headlines.
-The UI is server-rendered (Jinja2 + HTMX + Alpine.js + Tailwind) in a warm dark
-"reading-lamp" theme, with sentiment shown as a spectrum bar and a colour-sampled
-card halo.
+The UI is server-rendered (Jinja2 + HTMX + Alpine.js) with a hand-authored, flat
+**Bauhaus-inspired** design in **light and dark** themes — muted primaries and
+geometric shapes, with sentiment shown as a spectrum bar and a colour-sampled
+accent.
 
 - **Live demo:** <https://aries-news.onrender.com>
   _(free tier — the first request may cold-start for ~30s)_
@@ -109,7 +110,7 @@ src/app/
   api/           HTTP routers — JSON, HTMX pages, SSE
   migrations/    Alembic env + versioned migrations
 tests/           pytest (+ pytest-httpx, hypothesis, Playwright)
-design/mockups/  UI design explorations (chosen: dusk-spectrum.html)
+design/mockups/  early UI design explorations
 docs/adr/        architecture decision records
 ```
 

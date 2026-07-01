@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/codexceed/aries-news/compare/v0.1.0...v0.2.0) (2026-07-01)
+
+
+### Features
+
+* light/dark Bauhaus theme, slimmer chrome, persistent summaries ([#8](https://github.com/codexceed/aries-news/issues/8)) ([8d6da50](https://github.com/codexceed/aries-news/commit/8d6da50b1fd41cde4946e802798691e87d88ed73))
+
+
+### Bug Fixes
+
+* isolate the test database from the dev database ([#9](https://github.com/codexceed/aries-news/issues/9)) ([98f3b7b](https://github.com/codexceed/aries-news/commit/98f3b7b203ca3f55410ba418019119f449c089de))
+
 ## 0.1.0 (2026-06-30)
 
 

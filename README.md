@@ -18,6 +18,47 @@ accent.
 - **Build status & roadmap:** [`PROGRESS.md`](PROGRESS.md)
 - **Contributing / agent guide:** [`AGENTS.md`](AGENTS.md)
 
+## Design focus
+
+The case study called out three focus areas. Where we landed on each (full
+rationale in [ADR-0001](docs/adr/0001-stack-and-async.md) and
+[`ARCHITECTURE.md`](ARCHITECTURE.md)):
+
+### Product design & UX
+
+- **Server-rendered, tiny-JS stack** (Jinja2 + HTMX + Alpine) — hand-extendable
+  with no build step or second toolchain.
+- **Non-blocking analysis:** _Analyze_ returns a pending card instantly and an
+  SSE stream swaps in the result, so you keep browsing while the AI works.
+- **Idempotent, forgiving actions:** re-analyzing returns the existing insight;
+  a failed analysis auto-retries on re-request.
+- **Server-side view toggle (cards/list) and sort;** generated summaries persist
+  across re-search/re-sort, matched by normalized URL.
+- **AI Insights page** with a sentiment spectrum bar, a score-sampled halo, and a
+  client-side sentiment filter; Bauhaus light/dark theme.
+
+### REST API design
+
+- **One-directional layering:** `api/ → services/ → repositories/ → models/ +
+  schemas/`.
+- **Two HTTP surfaces** (JSON API + HTML page routes) share one service layer.
+- **Resource-oriented insights API** with honest status codes: `POST` → **202**
+  (idempotent), `GET` list/detail (**404** when absent), `GET …/stream` (SSE);
+  upstream news failure → **502**.
+- **Pydantic contracts at every boundary** (`response_model`-enforced);
+  idempotency enforced in the schema (unique `url_normalized`).
+
+### AI features
+
+- **Structured outputs** (`chat.completions.parse` with a Pydantic
+  `response_format`) guarantee the shape — no defensive parsing.
+- **One call** yields a neutral summary, a sentiment label, and a continuous
+  score in `[-1, 1]` kept consistent with the label; the score drives the UI
+  spectrum bar and halo.
+- **Runs out-of-band** in a background job (slow + paid), bounded by a semaphore;
+  transient-only retry with backoff, permanent failures mark the job failed.
+- **Injectable OpenAI client,** so tests never hit the network.
+
 ## Prerequisites
 
 - **Python 3.12**

@@ -218,7 +218,3 @@ class JobQueue:
             await self._publish(InsightRead.model_validate(insight))
         finally:
             self._semaphore.release()
-
-
-# Process-wide queue shared by the service layer and the API lifespan hooks.
-job_queue = JobQueue()

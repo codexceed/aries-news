@@ -1,8 +1,10 @@
 """Server-rendered page routes: landing, search results, AI Insights, analyze.
 
 These render HTML (Jinja2 + HTMX) and form the user-facing surface. They reuse
-the same services as the JSON API: :class:`NewsService` for search and
-:data:`insights_service` for analysis. The analyze action returns an HTML
+the same services as the JSON API: :class:`~app.services.news.NewsService` for
+search and :class:`~app.services.insights.InsightsService` for analysis, both
+injected from ``app.state`` via :mod:`app.dependencies`. The analyze action
+returns an HTML
 fragment that connects to a per-insight SSE stream, so a card updates itself
 when its (slow) AI job finishes while the user keeps browsing.
 """
@@ -22,15 +24,18 @@ from sse_starlette.sse import EventSourceResponse
 from app.core.db import SessionFactory, get_session
 from app.core.enums import JobStatus
 from app.core.url import normalize_url
+from app.dependencies import get_insights_service, get_news_service
 from app.repositories import insights as repo
 from app.schemas import ArticleBase, InsightRead
-from app.services.insights import insights_service
-from app.services.news import NewsServiceError, get_news_service
+from app.services.insights import InsightsService
+from app.services.news import NewsService, NewsServiceError
 from app.web.templating import templates
 
 router = APIRouter(tags=["pages"])
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
+NewsServiceDep = Annotated[NewsService, Depends(get_news_service)]
+InsightsServiceDep = Annotated[InsightsService, Depends(get_insights_service)]
 
 SUGGESTIONS = ["AI regulation", "markets", "space", "climate", "elections"]
 _SEARCH_LIMIT = 12
@@ -109,7 +114,9 @@ async def _existing_insights(
 async def search(
     request: Request,
     session: SessionDep,
+    news: NewsServiceDep,
     q: str = "",
+    *,
     view: str = "cards",
     sort: str = "relevance",
 ) -> HTMLResponse:
@@ -118,6 +125,7 @@ async def search(
     Args:
         request: The incoming request (used to detect HTMX).
         session: The request-scoped database session.
+        news: The injected news service.
         q: The free-text query.
         view: ``"cards"`` or ``"list"``.
         sort: ``"relevance"`` (default), ``"newest"``, or ``"oldest"``.
@@ -133,7 +141,7 @@ async def search(
 
     if query:
         try:
-            articles = await get_news_service().search(query, max_results=_SEARCH_LIMIT)
+            articles = await news.search(query, max_results=_SEARCH_LIMIT)
             articles = _sort_articles(articles, sort)
         except NewsServiceError:
             error = "We couldn't reach the news service. Please try again in a moment."
@@ -168,6 +176,7 @@ class AnalyzeForm(BaseModel):
 async def analyze(
     request: Request,
     session: SessionDep,
+    insights: InsightsServiceDep,
     form: Annotated[AnalyzeForm, Form()],
 ) -> HTMLResponse:
     """Request analysis for an article and return its updated card fragment.
@@ -179,6 +188,7 @@ async def analyze(
     Args:
         request: The incoming request.
         session: The request-scoped database session.
+        insights: The injected insights service.
         form: The submitted article fields and active view.
 
     Returns:
@@ -199,7 +209,7 @@ async def analyze(
         image_url=form.image_url or None,
         published_at=published,
     )
-    insight = await insights_service.request_analysis(session, article)
+    insight = await insights.request_analysis(session, article)
     return templates.TemplateResponse(
         request,
         "partials/article.html",
@@ -212,7 +222,9 @@ async def analyze(
 
 
 @router.get("/insight/{insight_id}/stream")
-async def insight_stream(insight_id: int, view: str = "cards") -> EventSourceResponse:
+async def insight_stream(
+    insight_id: int, insights: InsightsServiceDep, view: str = "cards"
+) -> EventSourceResponse:
     """Stream the finished article card for an insight via Server-Sent Events.
 
     Subscribes to the insight's updates and emits a single ``message`` event —
@@ -221,6 +233,7 @@ async def insight_stream(insight_id: int, view: str = "cards") -> EventSourceRes
 
     Args:
         insight_id: The insight to stream.
+        insights: The injected insights service.
         view: ``"cards"`` or ``"list"`` so the rendered fragment matches.
 
     Returns:
@@ -229,7 +242,7 @@ async def insight_stream(insight_id: int, view: str = "cards") -> EventSourceRes
     safe_view = _normalize_view(view)
 
     async def event_stream() -> AsyncIterator[dict[str, str]]:
-        async for update in insights_service.subscribe(insight_id):
+        async for update in insights.subscribe(insight_id):
             if update.status not in _TERMINAL:
                 continue
             async with SessionFactory() as session:

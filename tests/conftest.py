@@ -47,6 +47,8 @@ _redirect_to_test_database()
 from app.api.insights import router as insights_router  # noqa: E402
 from app.core.config import get_settings  # noqa: E402
 from app.core.db import Base, get_session  # noqa: E402
+from app.services.insights import InsightsService  # noqa: E402
+from app.services.jobs import JobQueue  # noqa: E402
 
 
 async def _ensure_database_exists(database_url: str) -> None:
@@ -131,6 +133,12 @@ async def client(
     """Yield an ASGI client for an app exposing the insights router."""
     app = FastAPI()
     app.include_router(insights_router)
+    # Production wires these in the lifespan; the bare test app sets them
+    # directly. The worker is not started, so jobs stay PENDING; the service and
+    # any subscriber share the one queue instance.
+    queue = JobQueue()
+    app.state.job_queue = queue
+    app.state.insights_service = InsightsService(queue=queue)
 
     async def override_get_session() -> AsyncIterator[AsyncSession]:
         async with session_factory() as session:

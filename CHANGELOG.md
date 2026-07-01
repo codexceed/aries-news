@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/codexceed/aries-news/compare/v0.2.1...v0.2.2) (2026-07-01)
+
+
+### Documentation
+
+* document the three case-study focus-area decisions in README ([#14](https://github.com/codexceed/aries-news/issues/14)) ([e776651](https://github.com/codexceed/aries-news/commit/e77665137e1dbe6ac36984729bba35fb389474ef))
+
 ## [0.2.1](https://github.com/codexceed/aries-news/compare/v0.2.0...v0.2.1) (2026-07-01)
 
 

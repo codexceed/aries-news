@@ -121,7 +121,7 @@ def test_landing_has_search(live_server: str, page: Page) -> None:
     """The landing page shows the hero and a usable search box."""
     page.goto(live_server)
     expect(page.locator("input.search__input")).to_be_visible()
-    expect(page.locator("h1")).to_contain_text("Read the day")
+    expect(page.locator("h1")).to_contain_text("Aries News")
 
 
 def test_insights_card_renders_and_filters(live_server: str, page: Page) -> None:

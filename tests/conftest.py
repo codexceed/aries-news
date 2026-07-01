@@ -1,20 +1,25 @@
 """Shared pytest fixtures: a transactional test database and an ASGI client.
 
-The DB-backed fixtures require a running PostgreSQL (``DATABASE_URL``, default
-``postgresql+asyncpg://aries:aries@localhost:5432/aries``). Each test gets a clean
-schema: all tables are created before the test and dropped afterwards. The async
-``client`` fixture mounts the insights router on a throwaway app and overrides the
-``get_session`` dependency to use the test engine.
+The suite creates and drops tables on every test, so it must never run against
+the developer's dev database -- doing so would wipe the schema the running app
+depends on. To guarantee isolation, this module redirects ``DATABASE_URL`` to a
+dedicated ``<db>_test`` sibling database (created on demand) *before* importing
+anything under ``app``, so the app's module-level engine and every fixture bind
+to the test database. Each test then gets a clean schema: all tables are created
+before it and dropped afterwards.
 """
 
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncIterator
 
 import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import text
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -22,9 +27,48 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from app.api.insights import router as insights_router
-from app.core.config import get_settings
-from app.core.db import Base, get_session
+
+def _redirect_to_test_database() -> None:
+    """Point ``DATABASE_URL`` at a ``<db>_test`` sibling before any app import.
+
+    Idempotent: a URL whose database already ends in ``_test`` is left as-is.
+    """
+    default = "postgresql+asyncpg://aries:aries@localhost:5432/aries"
+    url = make_url(os.environ.get("DATABASE_URL", default))
+    name = url.database or "aries"
+    if not name.endswith("_test"):
+        url = url.set(database=f"{name}_test")
+    os.environ["DATABASE_URL"] = url.render_as_string(hide_password=False)
+
+
+_redirect_to_test_database()
+
+# Imported after the redirect so `app.core.db`'s engine binds to the test DB.
+from app.api.insights import router as insights_router  # noqa: E402
+from app.core.config import get_settings  # noqa: E402
+from app.core.db import Base, get_session  # noqa: E402
+
+
+async def _ensure_database_exists(database_url: str) -> None:
+    """Create the target database if it does not already exist.
+
+    Connects to the server's maintenance ``postgres`` database (in AUTOCOMMIT,
+    since ``CREATE DATABASE`` cannot run inside a transaction) and creates the
+    target when missing, so the test DB needs no manual setup.
+    """
+    url = make_url(database_url)
+    admin_engine = create_async_engine(url.set(database="postgres"), isolation_level="AUTOCOMMIT")
+    try:
+        async with admin_engine.connect() as conn:
+            exists = await conn.scalar(
+                text("SELECT 1 FROM pg_database WHERE datname = :name"),
+                {"name": url.database},
+            )
+            if not exists:
+                await conn.execute(text(f'CREATE DATABASE "{url.database}"'))
+    finally:
+        await admin_engine.dispose()
+
 
 # Test modules that need a running PostgreSQL. Auto-marked `db` so the fast
 # pre-commit subset (`-m "not e2e and not db"`) can skip them.
@@ -50,6 +94,7 @@ async def db_engine() -> AsyncIterator[AsyncEngine]:
     from app.core.db import engine as app_engine
 
     settings = get_settings()
+    await _ensure_database_exists(settings.database_url)
     engine = create_async_engine(settings.database_url)
     await app_engine.dispose(close=False)
     async with engine.begin() as conn:

@@ -203,27 +203,3 @@ class NewsService:
         """Close the underlying HTTP client if this service owns it."""
         if self._owns_client:
             await self._client.aclose()
-
-
-class _ServiceHolder:
-    """Holds the lazily created process-wide :class:`NewsService`."""
-
-    instance: NewsService | None = None
-
-
-def get_news_service() -> NewsService:
-    """Return the process-wide :class:`NewsService` singleton.
-
-    Returns:
-        The lazily created shared service instance.
-    """
-    if _ServiceHolder.instance is None:
-        _ServiceHolder.instance = NewsService()
-    return _ServiceHolder.instance
-
-
-async def close_news_service() -> None:
-    """Close and discard the shared :class:`NewsService` singleton."""
-    if _ServiceHolder.instance is not None:
-        await _ServiceHolder.instance.aclose()
-        _ServiceHolder.instance = None

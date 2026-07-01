@@ -18,7 +18,7 @@ from app.core.enums import JobStatus
 from app.models import Insight
 from app.repositories import insights as repo
 from app.schemas import ArticleBase, InsightRead
-from app.services.jobs import JobQueue, job_queue
+from app.services.jobs import JobQueue
 
 logger = logging.getLogger(__name__)
 
@@ -28,14 +28,15 @@ _TERMINAL = (JobStatus.DONE, JobStatus.FAILED)
 class InsightsService:
     """Coordinates persistence and background processing of insights."""
 
-    def __init__(self, queue: JobQueue | None = None) -> None:
+    def __init__(self, queue: JobQueue) -> None:
         """Initialise the service.
 
         Args:
-            queue: Optional job queue override. Defaults to the shared
-                process-wide :data:`~app.services.jobs.job_queue`.
+            queue: The job queue this service drives. The same instance must be
+                the one whose worker is started, so its SSE subscriber registry
+                matches what the worker publishes to (wired in the app lifespan).
         """
-        self._queue = queue or job_queue
+        self._queue = queue
 
     @property
     def queue(self) -> JobQueue:
@@ -120,7 +121,3 @@ class InsightsService:
                     return
         finally:
             self._queue.unsubscribe(insight_id, queue)
-
-
-# Process-wide service instance shared by the API layer.
-insights_service = InsightsService()

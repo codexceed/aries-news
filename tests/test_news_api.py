@@ -6,11 +6,13 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import httpx
-from fastapi import FastAPI
+import pytest
+from fastapi import FastAPI, Request
 
 from app.api.news import router, search_news
+from app.dependencies import get_news_service
 from app.schemas.article import ArticleBase
-from app.services.news import NewsService, NewsServiceError, get_news_service
+from app.services.news import NewsService, NewsServiceError
 
 _CANNED = [
     ArticleBase(
@@ -84,7 +86,21 @@ async def test_max_out_of_range_returns_422() -> None:
     assert response.status_code == 422
 
 
-def test_search_news_is_wired_to_news_service() -> None:
-    # Sanity: the dependency default resolves to the real singleton type.
-    assert isinstance(get_news_service(), NewsService)
+def test_get_news_service_reads_app_state() -> None:
+    # The getter resolves the shared service off request.app.state.news_service.
+    service = NewsService()
+    app = FastAPI()
+    app.state.news_service = service
+    request = Request({"type": "http", "app": app})
+
+    assert get_news_service(request) is service
     assert search_news.__name__ == "search_news"
+
+
+def test_get_news_service_raises_when_state_unset() -> None:
+    # A bare app whose lifespan never ran should fail loudly, not with a bare
+    # AttributeError.
+    request = Request({"type": "http", "app": FastAPI()})
+
+    with pytest.raises(RuntimeError, match=r"news_service is not on app\.state"):
+        get_news_service(request)

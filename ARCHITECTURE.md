@@ -104,6 +104,19 @@ reverse.
   (settings singleton), `db.py` (async engine, `Base`, session factory),
   `enums.py` (`JobStatus`, `Sentiment`), `url.py` (URL normalization).
 
+**Service lifetime & injection.** `NewsService`, the `JobQueue`, and
+`InsightsService` (constructed with that queue) are created once in the
+`main.py` lifespan and stored on `app.state`. Routers never import a service
+instance directly; they receive it through the getters in `dependencies.py`
+(`get_news_service` / `get_insights_service`, which read `request.app.state` and
+raise a clear error if the lifespan never populated it) via `Depends`. This
+gives one process-wide instance per service — reused across JSON, HTMX, and SSE
+routes — and a single override seam for tests (`app.dependency_overrides`). The
+lifespan starts the queue's worker on boot and stops it on shutdown; because the
+`InsightsService` holds the *same* queue object, the worker publishes to exactly
+the registry the SSE endpoints subscribe on. See
+[ADR-0002](docs/adr/0002-app-state-services.md).
+
 ---
 
 ## 3. Data model
@@ -344,7 +357,8 @@ exist. (Mirrored in
 
 ```
 src/app/
-  main.py            FastAPI app factory (+ lifespan/worker wired in build phases)
+  main.py            FastAPI app factory (+ lifespan: app.state services, worker)
+  dependencies.py    Depends getters resolving app.state services (news, insights)
   core/
     config.py        pydantic-settings Settings + cached singleton
     db.py            async engine, AsyncSession factory, declarative Base

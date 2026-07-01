@@ -15,9 +15,10 @@ from fastapi import APIRouter, FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.api.insights import router as insights_router
-from app.api.insights import start_workers, stop_workers
 from app.api.news import router as news_router
-from app.services.news import close_news_service
+from app.services.insights import InsightsService
+from app.services.jobs import JobQueue
+from app.services.news import NewsService
 from app.web.routes import router as web_router
 
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -36,18 +37,32 @@ async def health() -> dict[str, str]:
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
-    """Start the background worker on boot and clean up on shutdown.
+async def lifespan(application: FastAPI) -> AsyncGenerator[None]:
+    """Create the shared services, start the worker, and clean up on shutdown.
+
+    The :class:`~app.services.news.NewsService`, the ``JobQueue``, and the
+    :class:`~app.services.insights.InsightsService` (wrapping that same queue)
+    are stored on ``app.state`` so every request reuses one process-wide
+    instance (resolved via the getters in :mod:`app.dependencies`). The queue's
+    worker is started here and stopped on shutdown, keeping the worker and the
+    service's SSE subscriber registry on the identical queue object.
+
+    Args:
+        application: The application whose ``state`` holds the shared services.
 
     Yields:
         Control to the running application.
     """
-    await start_workers()
+    queue = JobQueue()
+    application.state.job_queue = queue
+    application.state.news_service = NewsService()
+    application.state.insights_service = InsightsService(queue=queue)
+    await queue.start()
     try:
         yield
     finally:
-        await stop_workers()
-        await close_news_service()
+        await queue.stop()
+        await application.state.news_service.aclose()
 
 
 def create_app() -> FastAPI:

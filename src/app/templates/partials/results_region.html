@@ -35,6 +35,6 @@
   </div>
 {% else %}
   <div class="{% if view == 'cards' %}results-grid{% else %}list{% endif %}">
-    {% for a in articles %}{% set ins = none %}{% include "partials/article.html" %}{% endfor %}
+    {% for a in articles %}{% set ins = (insights|default({})).get(a.url) %}{% include "partials/article.html" %}{% endfor %}
   </div>
 {% endif %}

@@ -263,6 +263,35 @@ async def list_all(session: AsyncSession) -> list[Insight]:
     return list(result.scalars().all())
 
 
+async def list_by_normalized_urls(
+    session: AsyncSession, normalized_urls: list[str]
+) -> list[Insight]:
+    """Return insights for the given normalized article URLs, articles loaded.
+
+    Used to re-attach existing analyses to freshly fetched search results, so a
+    view/sort re-render (which re-queries the news provider) still shows the
+    summaries a user already generated.
+
+    Args:
+        session: The active database session.
+        normalized_urls: Normalized article URLs to look up.
+
+    Returns:
+        Matching :class:`Insight` rows with ``article`` populated. Empty when
+        ``normalized_urls`` is empty or nothing matches.
+    """
+    if not normalized_urls:
+        return []
+    stmt = (
+        select(Insight)
+        .join(Article, Insight.article_id == Article.id)
+        .options(selectinload(Insight.article))
+        .where(Article.url_normalized.in_(normalized_urls))
+    )
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+
 async def get_with_article(session: AsyncSession, insight_id: int) -> Insight | None:
     """Return an insight by id with its :class:`Article` eagerly loaded.
 

@@ -21,6 +21,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.core.db import SessionFactory, get_session
 from app.core.enums import JobStatus
+from app.core.url import normalize_url
 from app.repositories import insights as repo
 from app.schemas import ArticleBase, InsightRead
 from app.services.insights import insights_service
@@ -75,9 +76,39 @@ async def index(request: Request) -> HTMLResponse:
     )
 
 
+async def _existing_insights(
+    session: AsyncSession, articles: list[ArticleBase]
+) -> dict[str, InsightRead]:
+    """Map article URL -> its stored insight, for the given articles.
+
+    Looks up any analyses already persisted for these articles (keyed by
+    normalized URL) so re-rendered results keep their summaries. The returned
+    dict is keyed by the article's original ``url`` for direct template lookup.
+
+    Args:
+        session: The active database session.
+        articles: The fetched search results.
+
+    Returns:
+        A mapping from each article's ``url`` to its :class:`InsightRead`,
+        omitting articles that have no stored insight.
+    """
+    if not articles:
+        return {}
+    by_normalized = {normalize_url(a.url): a.url for a in articles}
+    rows = await repo.list_by_normalized_urls(session, list(by_normalized))
+    mapping: dict[str, InsightRead] = {}
+    for row in rows:
+        original = by_normalized.get(row.article.url_normalized)
+        if original is not None:
+            mapping[original] = InsightRead.model_validate(row)
+    return mapping
+
+
 @router.get("/search", response_class=HTMLResponse)
 async def search(
     request: Request,
+    session: SessionDep,
     q: str = "",
     view: str = "cards",
     sort: str = "relevance",
@@ -86,6 +117,7 @@ async def search(
 
     Args:
         request: The incoming request (used to detect HTMX).
+        session: The request-scoped database session.
         q: The free-text query.
         view: ``"cards"`` or ``"list"``.
         sort: ``"relevance"`` (default), ``"newest"``, or ``"oldest"``.
@@ -111,6 +143,7 @@ async def search(
         "suggestions": SUGGESTIONS,
         "query": query,
         "articles": articles,
+        "insights": await _existing_insights(session, articles),
         "view": view,
         "sort": sort,
         "error": error,

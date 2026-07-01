@@ -12,6 +12,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.enums import JobStatus, Sentiment
+from app.core.url import normalize_url
 from app.models import Article, Insight
 from app.repositories import insights as repo
 from app.schemas import AnalysisResult, ArticleBase
@@ -94,6 +95,26 @@ async def test_failed_insight_is_reset_on_retry(async_session: AsyncSession) -> 
     assert retried.error is None
     assert retried.completed_at is None
     assert await _count(async_session, Insight) == 1
+
+
+async def test_list_by_normalized_urls_reattaches_by_normalized_key(
+    async_session: AsyncSession,
+) -> None:
+    created = await repo.get_or_create_pending_insight(async_session, ARTICLE)
+    normalized = normalize_url(ARTICLE.url)
+
+    # A different tracking link for the same story normalizes to the same key,
+    # so re-rendered search results re-attach the existing insight.
+    variant = normalize_url("https://example.com/story?utm_source=newsletter")
+    rows = await repo.list_by_normalized_urls(async_session, [variant])
+    assert len(rows) == 1
+    assert rows[0].id == created.id
+    # The article is eagerly loaded (no lazy IO in the template layer).
+    assert rows[0].article.url_normalized == normalized
+
+    # Empty input short-circuits; unknown URLs match nothing.
+    assert await repo.list_by_normalized_urls(async_session, []) == []
+    assert await repo.list_by_normalized_urls(async_session, ["https://nope.example/x"]) == []
 
 
 async def test_reap_stale_resets_running_job(async_session: AsyncSession) -> None:

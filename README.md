@@ -63,6 +63,23 @@ make check          # lint + typecheck + pylint + tests (CI also runs e2e)
 
 Run `make help` for the full list of targets, and `make format` to auto-format.
 
+The suite runs against an isolated `<db>_test` database (e.g. `aries_test`),
+created automatically, so `make test` / `make check` never touch your dev data.
+
+## Troubleshooting
+
+**`asyncpg.exceptions.UndefinedTableError: relation "insights" does not exist`
+on `make run`** (and `make migrate` prints no `Running upgrade` line) — your dev
+schema and Alembic's version pointer have drifted: the `alembic_version` row says
+you're migrated, but the tables are gone. Rebuild the schema from scratch:
+
+```bash
+make db-reset       # drops the schema (DELETES ALL LOCAL DATA), re-runs migrations
+```
+
+This most often happened when the test suite dropped the app's tables; the suite
+is now isolated to a separate `<db>_test` database, so it no longer occurs.
+
 ## Deploy
 
 The app ships as a Docker image and runs its migrations on start. The repo
